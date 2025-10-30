@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,10 @@ public final class SocialNetworkUserImpl<U extends User> extends UserImpl implem
      * think of what type of keys and values would best suit the requirements
      */
 
+    private final static int DEFAULT_USER_AGE = -1;
+
+    private Map<String, Collection<U>> data;
+
     /*
      * [CONSTRUCTORS]
      *
@@ -63,13 +68,18 @@ public final class SocialNetworkUserImpl<U extends User> extends UserImpl implem
      *            alias of the user, i.e. the way a user is identified on an
      *            application
      */
-    public SocialNetworkUserImpl(final String name, final String surname, final String user, final int userAge) {
-        super(null, null, null, 0);
+    public SocialNetworkUserImpl(final String name, final String surname, final String username, final int userAge) {
+        super(name, surname, username, userAge);
+        this.data = new HashMap<>();
     }
 
     /*
      * 2) Define a further constructor where the age defaults to -1
      */
+
+    public SocialNetworkUserImpl(final String name, final String surname, final String username) {
+        super(name, surname, username, DEFAULT_USER_AGE);
+    }
 
     /*
      * [METHODS]
@@ -78,7 +88,14 @@ public final class SocialNetworkUserImpl<U extends User> extends UserImpl implem
      */
     @Override
     public boolean addFollowedUser(final String circle, final U user) {
+        Collection<U> groupFollowers = this.getFollowedUsersInGroup(circle); 
+        if (!groupFollowers.contains(user)) {
+            groupFollowers.add(user);
+            this.data.put(circle,groupFollowers);
+            return true;
+        }
         return false;
+        
     }
 
     /**
@@ -88,11 +105,20 @@ public final class SocialNetworkUserImpl<U extends User> extends UserImpl implem
      */
     @Override
     public Collection<U> getFollowedUsersInGroup(final String groupName) {
-        return null;
+        if (this.data.containsKey(groupName)) {
+            return new LinkedList<>(this.data.get(groupName));
+        }
+        else {
+            return new LinkedList<U>();
+        }    
     }
 
     @Override
     public List<U> getFollowedUsers() {
-        return null;
+        List<U> allFollowed = new LinkedList<>();
+        for (final String key : this.data.keySet()) {
+            allFollowed.addAll(this.data.get(key));
+        }
+        return allFollowed;
     }
 }
